@@ -2,7 +2,9 @@ from flask import Flask, request, jsonify, send_file
 import stripe
 import os
 
+from flask_cors import CORS
 app = Flask(__name__)
+CORS(app)
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
 PRODUCTOS = {
