@@ -8,15 +8,12 @@ CORS(app)
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
 PRODUCTOS = {
-    "prod_001": {"nombre": "Nomina RESICO 2025", "precio": 29900},
-    "prod_002": {"nombre": "Declaracion IVA", "precio": 19900},
-    "prod_003": {"nombre": "Control ISR Anual", "precio": 24900},
-    "prod_004": {"nombre": "Flujo de Caja", "precio": 17900},
-    "prod_005": {"nombre": "Balance General", "precio": 22900},
-    "prod_006": {"nombre": "Control IMSS INFONAVIT", "precio": 21900},
-    "prod_007": {"nombre": "Nomina Semanal", "precio": 18900},
-    "prod_008": {"nombre": "Declaracion Anual PM", "precio": 34900},
-    "prod_009": {"nombre": "Cuentas por Cobrar", "precio": 15900},
+    "1": {"nombre": "Nomina RESICO 2025", "precio": 34900},
+    "2": {"nombre": "Control de IVA Mensual", "precio": 24900},
+    "3": {"nombre": "Balance General", "precio": 29900},
+    "4": {"nombre": "Conciliacion Bancaria", "precio": 19900},
+    "5": {"nombre": "Declaracion Anual ISR PF", "precio": 39900},
+    "6": {"nombre": "Registro de Facturas CFDI 4.0", "precio": 17900},
     "paquete": {"nombre": "Paquete Contable Completo", "precio": 79900},
 }
 
