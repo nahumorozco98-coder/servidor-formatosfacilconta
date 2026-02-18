@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_file
 import stripe
-import resend
+from resend import Resend
 import os
 from dotenv import load_dotenv
 
@@ -9,7 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-resend.api_key = os.getenv("RESEND_API_KEY")
+resend_client = Resend(os.getenv("RESEND_API_KEY"))
 
 PRODUCTOS = {
     "prod_001": {"nombre": "Nomina RESICO 2025", "precio": 29900, "archivo": "nomina_resico.xlsx"},
@@ -113,7 +113,7 @@ def descargar(producto_id, session_id):
 
 def enviar_correo(email, nombre_producto, producto_id):
     url_descarga = f"{os.getenv('BACKEND_URL')}/descargar/{producto_id}"
-    resend.Emails.send({
+    resend_client.emails.send({
         "from": "FormatosFacilConta <ventas@formatosfacilconta.com>",
         "to": email,
         "subject": f"Tu formato esta listo: {nombre_producto}",
