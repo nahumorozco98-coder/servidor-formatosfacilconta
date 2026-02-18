@@ -1,15 +1,18 @@
 from flask import Flask, request, jsonify, send_file
 import stripe
-from resend import Resend
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
-
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-resend_client = Resend(os.getenv("RESEND_API_KEY"))
+
+try:
+    from resend import Resend
+    resend_client = Resend(os.getenv("RESEND_API_KEY"))
+except:
+    resend_client = None
 
 PRODUCTOS = {
     "prod_001": {"nombre": "Nomina RESICO 2025", "precio": 29900, "archivo": "nomina_resico.xlsx"},
@@ -82,7 +85,7 @@ def confirmar_pago():
 
         enviar_correo(email, producto["nombre"], producto_id)
 
-        return jsonify({"status": "ok", "mensaje": "Correo enviado con exito"})
+        return jsonify({"status": "ok"})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -104,7 +107,7 @@ def descargar(producto_id, session_id):
 
         ruta = os.path.join("formatos", producto["archivo"])
         if not os.path.exists(ruta):
-            return jsonify({"error": "Archivo no encontrado en servidor"}), 404
+            return jsonify({"error": "Archivo no encontrado"}), 404
 
         return send_file(ruta, as_attachment=True, download_name=producto["archivo"])
 
@@ -112,27 +115,30 @@ def descargar(producto_id, session_id):
         return jsonify({"error": str(e)}), 500
 
 def enviar_correo(email, nombre_producto, producto_id):
-    url_descarga = f"{os.getenv('BACKEND_URL')}/descargar/{producto_id}"
+    if not resend_client:
+        return
+    backend_url = os.getenv("BACKEND_URL", "")
+    url_descarga = f"{backend_url}/descargar/{producto_id}"
     resend_client.emails.send({
-        "from": "FormatosFacilConta <ventas@formatosfacilconta.com>",
+        "from": "FormatosFacilConta <onboarding@resend.dev>",
         "to": email,
         "subject": f"Tu formato esta listo: {nombre_producto}",
         "html": f"""
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px;background:#f9f9f9">
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px">
           <div style="background:#0d4a2f;padding:30px;border-radius:12px;text-align:center">
-            <h1 style="color:#c9a84c;margin:0;font-size:24px">FormatosFacilConta</h1>
+            <h1 style="color:#c9a84c;margin:0">FormatosFacilConta</h1>
             <p style="color:white;margin:10px 0 0">Tu compra fue exitosa</p>
           </div>
-          <div style="background:white;padding:30px;border-radius:12px;margin-top:20px">
-            <h2 style="color:#0d4a2f">Hola, gracias por tu compra</h2>
-            <p style="color:#555">Tu formato <strong>{nombre_producto}</strong> esta listo para descargar.</p>
+          <div style="background:#f9f9f9;padding:30px;border-radius:12px;margin-top:20px">
+            <h2 style="color:#0d4a2f">Gracias por tu compra</h2>
+            <p>Tu formato <strong>{nombre_producto}</strong> esta listo.</p>
             <div style="text-align:center;margin:30px 0">
               <a href="{url_descarga}"
-                style="background:#0d4a2f;color:white;padding:15px 30px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:16px">
+                style="background:#0d4a2f;color:white;padding:15px 30px;border-radius:50px;text-decoration:none;font-weight:bold">
                 Descargar mi formato
               </a>
             </div>
-            <p style="color:#999;font-size:13px">Si tienes dudas escribenos a hola@formatosfacilconta.com</p>
+            <p style="color:#999;font-size:13px">Dudas: hola@formatosfacilconta.com</p>
           </div>
         </div>
         """
@@ -140,4 +146,11 @@ def enviar_correo(email, nombre_producto, producto_id):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port))
+    app.run(host="0.0.0.0", port=port)
+```
+
+Guarda con **⌘ + S**, cierra TextEdit y luego en Terminal:
+```
+git add app.py
+git commit -m "Fix app completo"
+git push origin main
