@@ -16,7 +16,9 @@ PRODUCTOS = {
     "6": {"nombre": "Registro de Facturas CFDI 4.0", "precio": 17900},
     "paquete": {"nombre": "Paquete Contable Completo", "precio": 79900},
 }
-
+ARCHIVOS = {
+    "1": "https://drive.google.com/uc?export=download&id=1mFD43SeLpBWgdqLyEgWJcYcTfIrN2uOG",
+}
 @app.route("/")
 def home():
     return jsonify({"status": "FormatosFacilConta activo"})
@@ -50,7 +52,22 @@ def crear_sesion_pago():
         return jsonify({"url": session.url})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+@app.route("/confirmacion-pago", methods=["POST"])
+def confirmacion_pago():
+    try:
+        data = request.json
+        session_id = data.get("session_id")
+        producto_id = data.get("producto_id")
+        session = stripe.checkout.Session.retrieve(session_id)
+        if session.payment_status != "paid":
+            return jsonify({"error": "Pago no completado"}), 400
+        email = session.customer_email
+        link = ARCHIVOS.get(producto_id, "")
+        producto = PRODUCTOS.get(producto_id, {})
+        nombre = producto.get("nombre", "tu formato")
+        return jsonify({"status": "ok", "email": email, "link": link, "nombre": nombre})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
