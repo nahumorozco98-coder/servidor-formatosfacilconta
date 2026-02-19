@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify, send_file
 import stripe
 import os
-
+import resend
+resend.api_key = os.environ.get("RESEND_API_KEY", "")
 from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
@@ -65,6 +66,15 @@ def confirmacion_pago():
         link = ARCHIVOS.get(producto_id, "")
         producto = PRODUCTOS.get(producto_id, {})
         nombre = producto.get("nombre", "tu formato")
+        try:
+            resend.Emails.send({
+                "from": "FormatosFacilConta <onboarding@resend.dev>",
+                "to": email,
+                "subject": f"Tu formato esta listo: {nombre}",
+                "html": f"<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px'><div style='background:#0d4a2f;padding:30px;border-radius:12px;text-align:center'><h1 style='color:#c9a84c;margin:0'>FormatosFacilConta</h1><p style='color:white;margin:10px 0 0'>Tu compra fue exitosa</p></div><div style='background:#f9f9f9;padding:30px;border-radius:12px;margin-top:20px'><h2 style='color:#0d4a2f'>Gracias por tu compra</h2><p>Tu formato <strong>{nombre}</strong> esta listo.</p><div style='text-align:center;margin:30px 0'><a href='{link}' style='background:#0d4a2f;color:white;padding:15px 30px;border-radius:50px;text-decoration:none;font-weight:bold'>Descargar mi formato</a></div></div></div>"
+            })
+        except:
+            pass
         return jsonify({"status": "ok", "email": email, "link": link, "nombre": nombre})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
